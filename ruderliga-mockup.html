@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruderliga — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0e1a1c;
+    --bg-2: #0a1416;
+    --surface: #15272a;
+    --surface-2: #1c3236;
+    --border: #24393d;
+    --wood: #c9873f;
+    --wood-light: #e0a868;
+    --water: #3fcfc0;
+    --water-light: #7fe3d7;
+    --text: #f2ede4;
+    --text-dim: #9cb2b0;
+    --text-faint: #6b8280;
+    --gold: #e8b23d;
+    --silver: #c7cdd1;
+    --bronze: #b9793f;
+    --danger: #e2665b;
+    --radius: 16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 20% -10%, rgba(63,207,192,0.08), transparent 40%),
+      radial-gradient(circle at 90% 10%, rgba(201,135,63,0.07), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Plus Jakarta Sans', sans-serif;
+    min-height:100vh;
+    padding: 20px 14px 60px;
+  }
+  .wrap{max-width:640px; margin:0 auto;}
+
+  /* header */
+  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:10px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-icon{
+    width:38px; height:38px; border-radius:10px;
+    background:linear-gradient(135deg, var(--wood), var(--wood-light));
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+  }
+  .brand h1{font-size:19px; font-weight:800; letter-spacing:-0.02em;}
+  .brand .ver{font-size:10px; color:var(--text-faint); font-weight:600; letter-spacing:0.04em;}
+  .crew-badge{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:999px; padding:7px 14px; font-size:12px;
+    color:var(--text-dim); display:flex; align-items:center; gap:8px;
+    font-weight:600; letter-spacing:0.02em;
+  }
+  .crew-badge b{color:var(--water-light); font-weight:700;}
+  .avatars{display:flex; margin-left:4px;}
+  .avatar{
+    width:20px; height:20px; border-radius:50%; border:2px solid var(--surface);
+    margin-left:-6px; font-size:9px; display:flex; align-items:center; justify-content:center;
+    font-weight:800; color:#0e1a1c;
+  }
+  .identity-badge{
+    font-size:11px; color:var(--text-faint); padding-right:4px;
+  }
+  .identity-badge b{color:var(--text); font-weight:700;}
+  .switch-link{color:var(--water-light); font-weight:700; cursor:pointer; text-decoration:underline; text-underline-offset:2px;}
+
+  /* hero display */
+  .hero{
+    position:relative;
+    border-radius: 20px;
+    padding: 3px;
+    background: linear-gradient(155deg, var(--wood) 0%, #8a5a26 45%, #5c3c1a 100%);
+    margin-bottom: 20px;
+    box-shadow: 0 12px 30px -12px rgba(0,0,0,0.6);
+  }
+  .hero-inner{
+    background: linear-gradient(180deg, #0b1719, #081213);
+    border-radius: 17px;
+    padding: 22px 20px 20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-inner::before{
+    content:"";
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      to bottom, rgba(63,207,192,0.025) 0px, rgba(63,207,192,0.025) 1px,
+      transparent 1px, transparent 3px
+    );
+    pointer-events:none;
+  }
+  .hero-label{
+    font-size:11px; text-transform:uppercase; letter-spacing:0.12em;
+    color:var(--water-light); font-weight:700; margin-bottom:4px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .dot{width:6px; height:6px; border-radius:50%; background:var(--water); box-shadow:0 0 8px var(--water); animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.35;}}
+  .hero-time{
+    font-family:'Space Grotesk', monospace;
+    font-size:56px; font-weight:700; letter-spacing:0.02em;
+    color:var(--water-light);
+    text-shadow: 0 0 18px rgba(63,207,192,0.45);
+    font-variant-numeric: tabular-nums;
+    line-height:1;
+    margin: 6px 0 10px;
+  }
+  .hero-time span{font-size:22px; color:var(--text-dim); font-weight:500; margin-left:6px;}
+  .hero-meta{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;}
+  .hero-holder{font-size:14px; color:var(--text-dim);}
+  .hero-holder b{color:var(--wood-light); font-weight:700;}
+  .hero-stats{display:flex; gap:18px;}
+  .hero-stat{text-align:right;}
+  .hero-stat .n{font-family:'Space Grotesk', monospace; font-size:15px; font-weight:600; color:var(--text);}
+  .hero-stat .l{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em;}
+
+  /* tabs */
+  .tabs{display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px;}
+  .tab{
+    flex-shrink:0;
+    background:var(--surface); border:1px solid var(--border);
+    color:var(--text-dim); font-size:12.5px; font-weight:600;
+    padding:9px 14px; border-radius:10px; cursor:pointer;
+    transition:all .15s;
+    white-space:nowrap;
+  }
+  .tab.active{
+    background:var(--water); color:#06201d; border-color:var(--water);
+  }
+
+  /* leaderboard */
+  .board{margin-bottom:22px;}
+  .card{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:14px 16px;
+    display:flex; align-items:center; gap:14px;
+    margin-bottom:8px;
+    transition: border-color .15s;
+  }
+  .card.rank-1{border-color:rgba(232,178,61,0.5); background:linear-gradient(90deg, rgba(232,178,61,0.08), var(--surface) 40%);}
+  .rank{
+    width:32px; height:32px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk', monospace; font-weight:700; font-size:14px;
+    background:var(--surface-2); color:var(--text-dim);
+  }
+  .rank-1 .rank{background:var(--gold); color:#3a2a00;}
+  .rank-2 .rank{background:var(--silver); color:#2a2a2a;}
+  .rank-3 .rank{background:var(--bronze); color:#2a1500;}
+  .card-name{flex:1; min-width:0;}
+  .card-name .n{font-weight:700; font-size:14.5px;}
+  .card-name .s{font-size:11.5px; color:var(--text-faint);}
+  .card-value{text-align:right;}
+  .card-value .v{font-family:'Space Grotesk', monospace; font-weight:700; font-size:18px; color:var(--water-light);}
+  .card-value .u{font-size:10.5px; color:var(--text-faint);}
+
+  /* section headers */
+  .section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .section-head h2{font-size:14px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em;}
+
+  /* add entry */
+  .add-btn{
+    width:100%; background:linear-gradient(135deg, var(--water), #2fa89b);
+    color:#06201d; border:none; border-radius:12px;
+    padding:14px; font-weight:800; font-size:14.5px; cursor:pointer;
+    margin-bottom:20px; letter-spacing:0.01em;
+  }
+  .panel{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:18px; margin-bottom:20px;
+    display:none;
+  }
+  .panel.open{display:block;}
+  .panel h3{font-size:15px; font-weight:700; margin-bottom:14px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .field{margin-bottom:12px;}
+  .field label{font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:5px; font-weight:600;}
+  .field input, .field select{
+    width:100%; background:var(--bg-2); border:1px solid var(--border);
+    border-radius:9px; padding:10px 11px; color:var(--text);
+    font-family:'Plus Jakarta Sans', sans-serif; font-size:14px;
+  }
+  .field input:focus, .field select:focus{outline:none; border-color:var(--water);}
+  .pace-preview{
+    background:var(--bg-2); border:1px dashed var(--border); border-radius:9px;
+    padding:9px 12px; font-size:12.5px; color:var(--text-dim); margin-bottom:12px;
+    display:flex; justify-content:space-between;
+  }
+  .pace-preview b{font-family:'Space Grotesk', monospace; color:var(--water-light); font-size:14px;}
+  .submit-btn{
+    width:100%; background:var(--wood); color:#2a1600; border:none;
+    border-radius:9px; padding:12px; font-weight:800; font-size:14px; cursor:pointer;
+  }
+
+  /* activity */
+  .activity-item{
+    display:flex; align-items:center; gap:12px;
+    padding:11px 0; border-bottom:1px solid var(--border);
+  }
+  .activity-item:last-child{border-bottom:none;}
+  .act-dot{width:8px; height:8px; border-radius:50%; background:var(--wood); flex-shrink:0;}
+  .act-body{flex:1; min-width:0;}
+  .act-body .t{font-size:13.5px; font-weight:600;}
+  .act-body .t b{color:var(--water-light);}
+  .act-body .d{font-size:11.5px; color:var(--text-faint);}
+  .act-pb{
+    font-size:9.5px; font-weight:800; color:#3a2a00; background:var(--gold);
+    padding:2px 7px; border-radius:999px; letter-spacing:0.03em; flex-shrink:0;
+  }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--gold); color:#3a2a00; font-weight:800; font-size:13.5px;
+    padding:12px 20px; border-radius:12px; box-shadow:0 10px 25px -8px rgba(0,0,0,0.5);
+    opacity:0; transition:all .3s; pointer-events:none; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .note{
+    font-size:11px; color:var(--text-faint); text-align:center; margin-top:24px; line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🚣</div>
+      <div>
+        <h1>Ruderliga</h1>
+        <div class="ver">v0.2 — Mockup</div>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+      <div class="crew-badge">
+        Crew <b>EICHE-42</b>
+        <div class="avatars">
+          <div class="avatar" style="background:var(--water-light)">S</div>
+          <div class="avatar" style="background:var(--wood-light)">J</div>
+        </div>
+      </div>
+      <div class="identity-badge">Angemeldet als <b id="currentUserLabel">Stefan</b> · <span class="switch-link" id="switchUser">wechseln</span></div>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-label"><span class="dot"></span>BESTZEIT / 500M — CREW-REKORD</div>
+      <div class="hero-time" id="heroTime">1:52<span>min</span></div>
+      <div class="hero-meta">
+        <div class="hero-holder">Gehalten von <b id="heroHolder">Stefan</b></div>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="n" id="heroDate">–</div><div class="l">Datum</div></div>
+          <div class="hero-stat"><div class="n" id="heroDist">–</div><div class="l">Distanz</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="board" id="board"></div>
+
+  <button class="add-btn" id="toggleForm">+ Training eintragen</button>
+
+  <div class="panel" id="panel">
+    <h3>Neue Trainingseinheit</h3>
+    <div class="field">
+      <label>Datum</label>
+      <input type="date" id="fDate">
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>Dauer (mm:ss)</label>
+        <input type="text" id="fDuration" placeholder="z.B. 20:00">
+      </div>
+      <div class="field">
+        <label>Distanz (m)</label>
+        <input type="number" id="fDistance" placeholder="z.B. 4500">
+      </div>
+    </div>
+    <div class="pace-preview">
+      <span>Zeit/500m (auto-berechnet)</span>
+      <b id="pacePreview">–:––</b>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label>Ruderschläge gesamt</label>
+        <input type="number" id="fStrokes" placeholder="z.B. 820">
+      </div>
+      <div class="field">
+        <label>Schläge/Min (Ø)</label>
+        <input type="number" id="fSpm" placeholder="z.B. 24">
+      </div>
+    </div>
+    <button class="submit-btn" id="submitEntry">Eintrag speichern</button>
+  </div>
+
+  <div class="section-head"><h2>Letzte Einträge</h2></div>
+  <div id="activity"></div>
+
+  <div class="note">
+    Mockup mit In-Memory-Demodaten (2 Beispielmitglieder, Namen frei anpassbar).<br>
+    Echtes Setup: Supabase-Backend + Crew-Code-System laut Claude-Code-Prompt.
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // --- demo seed data (relative to today, so "letzte 7 Tage" real bleibt) ---
+  const today = new Date();
+  function daysAgo(n){ const d = new Date(today); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+
+  let sessions = [
+    {member:"Stefan", date:daysAgo(1),  duration:1180, distance:5000, strokes:940, spm:24},
+    {member:"Julia",  date:daysAgo(2),  duration:1260, distance:5000, strokes:1010, spm:26},
+    {member:"Stefan", date:daysAgo(3),  duration:1200, distance:5200, strokes:960, spm:23},
+    {member:"Julia",  date:daysAgo(4),  duration:600,  distance:2400, strokes:480, spm:25},
+    {member:"Stefan", date:daysAgo(6),  duration:1500, distance:6300, strokes:1180, spm:22},
+    {member:"Julia",  date:daysAgo(6),  duration:1140, distance:4800, strokes:930, spm:26},
+    {member:"Stefan", date:daysAgo(9),  duration:1200, distance:5000, strokes:950, spm:24},
+    {member:"Julia",  date:daysAgo(11), duration:1320, distance:5400, strokes:1080, spm:25},
+    {member:"Stefan", date:daysAgo(14), duration:1080, distance:4400, strokes:860, spm:24},
+  ];
+
+  const members = { Stefan: "#7fe3d7", Julia: "#e0a868" };
+
+  // Identität kommt aus dem Crew-Beitritt, wird lokal gemerkt (kein Feld pro Eintrag)
+  let currentUser = "Stefan";
+
+  function fmtPace(sec){
+    const m = Math.floor(sec/60), s = Math.round(sec%60);
+    return m + ":" + String(s).padStart(2,"0");
+  }
+  function fmtDuration(sec){
+    const m = Math.floor(sec/60), s = sec%60;
+    return m + ":" + String(s).padStart(2,"0");
+  }
+  function paceOf(s){ return (s.duration / s.distance) * 500; }
+  function parseDuration(str){
+    const parts = str.split(":").map(Number);
+    if(parts.length===2 && !parts.some(isNaN)) return parts[0]*60+parts[1];
+    return null;
+  }
+  function withinDays(dateStr, n){
+    const d = new Date(dateStr);
+    const diff = (today - d) / 86400000;
+    return diff <= n && diff >= -1;
+  }
+  function fmtDate(dateStr){
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
+  }
+
+  const categories = [
+    { key:"pace", label:"Bestzeit /500m",
+      compute: () => Object.keys(members).map(m=>{
+        const own = sessions.filter(s=>s.member===m);
+        if(!own.length) return null;
+        const best = Math.min(...own.map(paceOf));
+        return {member:m, value:best, display:fmtPace(best), unit:"min/500m"};
+      }).filter(Boolean).sort((a,b)=>a.value-b.value)
+    },
+    { key:"distance", label:"Gesamtdistanz",
+      compute: () => Object.keys(members).map(m=>{
+        const own = sessions.filter(s=>s.member===m);
+        const sum = own.reduce((a,s)=>a+s.distance,0);
+        return {member:m, value:sum, display:(sum/1000).toFixed(1)+" km", unit:own.length+" Sessions"};
+      }).sort((a,b)=>b.value-a.value)
+    },
+    { key:"freq", label:"Sessions (7 Tage)",
+      compute: () => Object.keys(members).map(m=>{
+        const count = sessions.filter(s=>s.member===m && withinDays(s.date,7)).length;
+        return {member:m, value:count, display:count+"x", unit:"diese Woche"};
+      }).sort((a,b)=>b.value-a.value)
+    },
+  ];
+
+  let activeCat = "pace";
+
+  function renderTabs(){
+    const el = document.getElementById("tabs");
+    el.innerHTML = categories.map(c =>
+      `<div class="tab ${c.key===activeCat?'active':''}" data-key="${c.key}">${c.label}</div>`
+    ).join("");
+    el.querySelectorAll(".tab").forEach(t=>{
+      t.onclick = () => { activeCat = t.dataset.key; renderAll(); };
+    });
+  }
+
+  function renderBoard(){
+    const cat = categories.find(c=>c.key===activeCat);
+    const rows = cat.compute();
+    const el = document.getElementById("board");
+    el.innerHTML = rows.map((r,i)=>`
+      <div class="card rank-${i+1}">
+        <div class="rank">${i+1}</div>
+        <div class="card-name">
+          <div class="n" style="color:${members[r.member]}">${r.member}</div>
+          <div class="s">${r.unit}</div>
+        </div>
+        <div class="card-value">
+          <div class="v">${r.display}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderHero(){
+    const paceRow = categories.find(c=>c.key==="pace").compute()[0];
+    if(!paceRow) return;
+    const best = sessions.filter(s=>s.member===paceRow.member).reduce((best,s)=>
+      paceOf(s) < paceOf(best) ? s : best
+    );
+    document.getElementById("heroTime").innerHTML = paceRow.display + "<span>min</span>";
+    document.getElementById("heroHolder").textContent = paceRow.member;
+    document.getElementById("heroDate").textContent = fmtDate(best.date);
+    document.getElementById("heroDist").textContent = (best.distance/1000).toFixed(1)+"km";
+  }
+
+  function renderActivity(){
+    const sorted = [...sessions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,6);
+    const el = document.getElementById("activity");
+    el.innerHTML = sorted.map(s=>{
+      const isPB = paceOf(s) === Math.min(...sessions.filter(x=>x.member===s.member).map(paceOf));
+      return `
+        <div class="activity-item">
+          <div class="act-dot" style="background:${members[s.member]}"></div>
+          <div class="act-body">
+            <div class="t"><b>${s.member}</b> — ${(s.distance/1000).toFixed(1)}km in ${fmtDuration(s.duration)} · ${fmtPace(paceOf(s))}/500m</div>
+            <div class="d">${fmtDate(s.date)}</div>
+          </div>
+          ${isPB ? '<div class="act-pb">PB</div>' : ''}
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderAll(){
+    renderTabs();
+    renderBoard();
+    renderHero();
+    renderActivity();
+  }
+
+  // form
+  document.getElementById("toggleForm").onclick = () => {
+    const p = document.getElementById("panel");
+    p.classList.toggle("open");
+    if(p.classList.contains("open")){
+      document.getElementById("fDate").value = today.toISOString().slice(0,10);
+    }
+  };
+
+  function updatePacePreview(){
+    const dur = parseDuration(document.getElementById("fDuration").value);
+    const dist = parseFloat(document.getElementById("fDistance").value);
+    const el = document.getElementById("pacePreview");
+    if(dur && dist) el.textContent = fmtPace((dur/dist)*500) + " min";
+    else el.textContent = "–:––";
+  }
+  ["fDuration","fDistance"].forEach(id=>{
+    document.getElementById(id).addEventListener("input", updatePacePreview);
+  });
+
+  function showToast(msg){
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"), 2400);
+  }
+
+  document.getElementById("submitEntry").onclick = () => {
+    const member = currentUser;
+    const date = document.getElementById("fDate").value;
+    const duration = parseDuration(document.getElementById("fDuration").value);
+    const distance = parseFloat(document.getElementById("fDistance").value);
+    const strokes = parseFloat(document.getElementById("fStrokes").value) || 0;
+    const spm = parseFloat(document.getElementById("fSpm").value) || 0;
+
+    if(!date || !duration || !distance){
+      showToast("Bitte Datum, Dauer und Distanz ausfüllen");
+      return;
+    }
+
+    const prevBest = sessions.filter(s=>s.member===member).length
+      ? Math.min(...sessions.filter(s=>s.member===member).map(paceOf))
+      : Infinity;
+
+    const entry = {member, date, duration, distance, strokes, spm};
+    sessions.push(entry);
+
+    const isPB = paceOf(entry) < prevBest;
+    renderAll();
+    document.getElementById("panel").classList.remove("open");
+    ["fDuration","fDistance","fStrokes","fSpm"].forEach(id=>document.getElementById(id).value="");
+    updatePacePreview();
+
+    showToast(isPB ? `🏆 Neue Bestzeit für ${member}!` : "Eintrag gespeichert");
+  };
+
+  // Demo: Identität wechseln simuliert das "Bist du das?"-Gerätewechsel-Szenario
+  document.getElementById("switchUser").onclick = () => {
+    currentUser = currentUser === "Stefan" ? "Julia" : "Stefan";
+    document.getElementById("currentUserLabel").textContent = currentUser;
+  };
+
+  renderAll();
+</script>
+</body>
+</html>

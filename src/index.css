@@ -1,0 +1,57 @@
+:root {
+  --bg: #0e1a1c;
+  --bg-2: #0a1416;
+  --surface: #15272a;
+  --surface-2: #1c3236;
+  --border: #24393d;
+  --wood: #c9873f;
+  --wood-light: #e0a868;
+  --water: #3fcfc0;
+  --water-light: #7fe3d7;
+  --text: #f2ede4;
+  --text-dim: #9cb2b0;
+  --text-faint: #6b8280;
+  --gold: #e8b23d;
+  --silver: #c7cdd1;
+  --bronze: #b9793f;
+  --danger: #e2665b;
+  --radius: 16px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at 20% -10%, rgba(63, 207, 192, 0.08), transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(201, 135, 63, 0.07), transparent 45%),
+    var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  min-height: 100vh;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.mono {
+  font-family: 'Space Grotesk', monospace;
+  font-variant-numeric: tabular-nums;
+}
