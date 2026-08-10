@@ -10,7 +10,7 @@ const emptyForm = {
   resistance: '',
 }
 
-export default function EntryForm({ memberId, loadState, onAddSession, onToast }) {
+export default function EntryForm({ crewId, memberId, loadState, onAddSession, onToast }) {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [paceOverride, setPaceOverride] = useState('')
@@ -46,6 +46,7 @@ export default function EntryForm({ memberId, loadState, onAddSession, onToast }
     setBusy(true)
     try {
       const { isPB } = await onAddSession({
+        crew_id: crewId,
         member_id: memberId,
         session_date: form.date,
         duration_seconds,

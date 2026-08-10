@@ -45,6 +45,7 @@ function MainApp({ identity, onSwitchMember, onLeaveCrew }) {
       <Leaderboard sessions={sessions} members={members} />
 
       <EntryForm
+        crewId={identity.crewId}
         memberId={identity.memberId}
         loadState={loadState}
         onAddSession={addSession}
