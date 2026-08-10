@@ -29,9 +29,9 @@ export default function Header({ crewName, members, currentName, onOpenSettings 
         </div>
         <div className="identity-badge">
           Angemeldet als <b>{currentName}</b> ·{' '}
-          <span className="switch-link" onClick={onOpenSettings}>
+          <button type="button" className="switch-link" onClick={onOpenSettings}>
             wechseln
-          </span>
+          </button>
         </div>
       </div>
     </header>

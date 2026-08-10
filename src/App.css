@@ -84,6 +84,10 @@ header {
   font-weight: 700;
 }
 .switch-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
   color: var(--water-light);
   font-weight: 700;
   cursor: pointer;

@@ -74,12 +74,17 @@ export default function HistoryItem({ session, member, isPB, canEdit, onUpdate, 
       {isPB && <div className="act-pb">PB</div>}
       {canEdit && (
         <div className="act-actions">
-          <span className="link-btn" onClick={() => setEditing(true)}>
+          <button type="button" className="link-btn" onClick={() => setEditing(true)}>
             Bearbeiten
-          </span>
-          <span className={`link-btn danger ${armed ? 'armed' : ''}`} onClick={handleDeleteClick} onMouseLeave={cancelDelete}>
+          </button>
+          <button
+            type="button"
+            className={`link-btn danger ${armed ? 'armed' : ''}`}
+            onClick={handleDeleteClick}
+            onMouseLeave={cancelDelete}
+          >
             {armed ? 'Wirklich?' : 'Löschen'}
-          </span>
+          </button>
         </div>
       )}
     </div>
