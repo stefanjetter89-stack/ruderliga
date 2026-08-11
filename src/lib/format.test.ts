@@ -60,6 +60,14 @@ describe('paceOf', () => {
     expect(paceOf({ duration_seconds: 1200, distance_m: 4500 })).toBeCloseTo(133.33, 2)
     expect(paceOf({ duration_seconds: 120, distance_m: 500 })).toBe(120)
   })
+
+  it('returns NaN instead of Infinity for a zero or negative distance', () => {
+    // Unreachable through the app (Zod + the DB constraint both require
+    // distance_m >= 1), but the function guards it anyway: Infinity would
+    // sort to rank 1 on the leaderboard instead of being excluded.
+    expect(paceOf({ duration_seconds: 1200, distance_m: 0 })).toBeNaN()
+    expect(paceOf({ duration_seconds: 1200, distance_m: -100 })).toBeNaN()
+  })
 })
 
 describe('parseIsoDate', () => {

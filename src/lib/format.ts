@@ -12,7 +12,14 @@ export function parseIsoDate(dateStr: string): Date {
   return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1)
 }
 
+/**
+ * Guards distance_m <= 0 explicitly rather than relying on the Zod schema and
+ * DB constraint (both require >= 1) to keep this correct as a standalone
+ * function — a 0 m row would otherwise divide to Infinity and sort to rank 1
+ * on the leaderboard instead of being excluded.
+ */
 export function paceOf(session: Pick<Session, 'duration_seconds' | 'distance_m'>): number {
+  if (session.distance_m <= 0) return Number.NaN
   return (session.duration_seconds / session.distance_m) * 500
 }
 
