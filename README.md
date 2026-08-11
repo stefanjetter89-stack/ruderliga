@@ -38,8 +38,10 @@ npm run dev
 ```
 
 Für ein frisches Supabase-Projekt: den Inhalt von [`supabase/schema.sql`](supabase/schema.sql)
-im SQL-Editor ausführen. Eine bestehende v1-Datenbank wird stattdessen mit
-[`supabase/migrations/001_lockdown.sql`](supabase/migrations/001_lockdown.sql) aktualisiert.
+im SQL-Editor ausführen. Eine bestehende Datenbank wird stattdessen mit den Dateien in
+[`supabase/migrations/`](supabase/migrations/) der Reihe nach aktualisiert — `001_lockdown.sql`
+(RLS-Abriegelung, falls noch nicht angewendet), dann `002_watts.sql` (Leistung in Watt statt
+Ruderschläge/Widerstandsstufe).
 
 Benötigte Umgebungsvariablen (lokal in `.env.local`, in CI als GitHub Secrets):
 
@@ -88,14 +90,12 @@ Ein paar Entscheidungen, die nicht aus dem Code hervorgehen:
 - **Schreiben erst nach bestätigtem Laden.** Das Eintragsformular bleibt gesperrt,
   bis die Daten der Crew geladen sind, damit ein Schreibvorgang nie einem
   unvollständigen Stand vorauseilt.
-- **Bearbeiten ist ein atomares Teil-Update.** `update_session` schreibt genau die
-  vier Spalten des Formulars in einem Statement — kein Read-Modify-Write, und
-  Felder, die dieses Gerät nie angesehen hat, können nicht überschrieben werden.
+- **Bearbeiten ist ein atomares Update.** Anlegen und Bearbeiten fragen dieselben
+  Felder ab (Datum, Dauer, Distanz, Leistung, Schlagfrequenz) und `update_session`
+  schreibt sie in einem einzigen Statement — kein Read-Modify-Write.
 
 ### Bekannte Grenzen
 
-- Ruderschläge, Schlagfrequenz und Widerstandsstufe lassen sich beim Anlegen
-  erfassen, aber nachträglich nicht mehr ändern (nur Datum, Dauer, Distanz).
 - Kein Echtzeit-Abgleich: Einträge des anderen Geräts erscheinen beim
   Fenster-Fokus, nicht sofort.
 - Wer die Mitgliedschaft in einer Crew hat, kann jeden Eintrag dieser Crew sehen;

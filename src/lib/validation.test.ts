@@ -7,10 +7,9 @@ function validSession(overrides: Record<string, unknown> = {}) {
     session_date: todayIso(),
     duration_seconds: 1200,
     distance_m: 4500,
-    total_strokes: 820,
+    avg_watts: 145,
     avg_spm: 24,
     pace_per_500m_seconds: 133.33,
-    resistance_level: 8,
     ...overrides,
   }
 }
@@ -22,12 +21,7 @@ describe('sessionSchema', () => {
 
   it('accepts a minimal entry with the optional fields left blank', () => {
     const result = sessionSchema.safeParse(
-      validSession({
-        total_strokes: null,
-        avg_spm: null,
-        pace_per_500m_seconds: null,
-        resistance_level: null,
-      }),
+      validSession({ avg_watts: null, avg_spm: null, pace_per_500m_seconds: null }),
     )
     expect(result.success).toBe(true)
   })
@@ -50,18 +44,16 @@ describe('sessionSchema', () => {
     expect(sessionSchema.safeParse(validSession({ duration_seconds: 90000 })).success).toBe(false)
     expect(sessionSchema.safeParse(validSession({ distance_m: 500000 })).success).toBe(false)
     expect(sessionSchema.safeParse(validSession({ avg_spm: 500 })).success).toBe(false)
-    expect(sessionSchema.safeParse(validSession({ total_strokes: 999999 })).success).toBe(false)
+    expect(sessionSchema.safeParse(validSession({ avg_watts: 5000 })).success).toBe(false)
+  })
+
+  it('rejects a negative power reading', () => {
+    expect(sessionSchema.safeParse(validSession({ avg_watts: -10 })).success).toBe(false)
   })
 
   it('rejects NaN, which is what a blank required field parses to', () => {
     expect(sessionSchema.safeParse(validSession({ duration_seconds: Number.NaN })).success).toBe(false)
     expect(sessionSchema.safeParse(validSession({ distance_m: Number.NaN })).success).toBe(false)
-  })
-
-  it('rejects a resistance level outside 1–15', () => {
-    expect(sessionSchema.safeParse(validSession({ resistance_level: 0 })).success).toBe(false)
-    expect(sessionSchema.safeParse(validSession({ resistance_level: 16 })).success).toBe(false)
-    expect(sessionSchema.safeParse(validSession({ resistance_level: 15 })).success).toBe(true)
   })
 
   it('rejects dates far in the future or before the sport existed on this device', () => {

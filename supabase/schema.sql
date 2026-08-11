@@ -54,13 +54,12 @@ create table sessions (
   session_date date not null,
   duration_seconds int not null,
   distance_m int not null,
-  total_strokes int,
+  avg_watts numeric,
   avg_spm numeric,
   -- Client-precomputed from duration_seconds/distance_m*500, but a plain
   -- (non-generated) column so it can be overridden before saving if the
   -- device's own display disagrees with the arithmetic.
   pace_per_500m_seconds numeric,
-  resistance_level int,
   created_at timestamptz not null default now(),
 
   -- Bounds are deliberately generous — they exist to keep impossible data out
@@ -68,10 +67,9 @@ create table sessions (
   -- not to second-guess anyone's training.
   constraint sessions_duration_sane check (duration_seconds between 1 and 86400),
   constraint sessions_distance_sane check (distance_m between 1 and 200000),
-  constraint sessions_strokes_sane check (total_strokes is null or total_strokes between 0 and 100000),
+  constraint sessions_watts_sane check (avg_watts is null or avg_watts between 0 and 2000),
   constraint sessions_spm_sane check (avg_spm is null or avg_spm between 0 and 200),
   constraint sessions_pace_sane check (pace_per_500m_seconds is null or pace_per_500m_seconds between 1 and 3600),
-  constraint sessions_resistance_sane check (resistance_level is null or resistance_level between 1 and 15),
   constraint sessions_date_sane check (session_date between date '2000-01-01' and current_date + 1)
 );
 
@@ -179,10 +177,9 @@ create or replace function add_session(
   p_session_date date,
   p_duration_seconds int,
   p_distance_m int,
-  p_total_strokes int,
+  p_avg_watts numeric,
   p_avg_spm numeric,
-  p_pace_per_500m_seconds numeric,
-  p_resistance_level int
+  p_pace_per_500m_seconds numeric
 )
 returns public.sessions
 language plpgsql
@@ -204,27 +201,27 @@ begin
 
   insert into public.sessions (
     crew_id, member_id, session_date, duration_seconds, distance_m,
-    total_strokes, avg_spm, pace_per_500m_seconds, resistance_level
+    avg_watts, avg_spm, pace_per_500m_seconds
   ) values (
     v_crew_id, p_member_id, p_session_date, p_duration_seconds, p_distance_m,
-    p_total_strokes, p_avg_spm, p_pace_per_500m_seconds, p_resistance_level
+    p_avg_watts, p_avg_spm, p_pace_per_500m_seconds
   )
   returning * into v_session;
   return v_session;
 end;
 $$;
 
--- Touches only the four columns the edit form owns. total_strokes, avg_spm and
--- resistance_level are deliberately left alone, so a concurrent edit from the
--- other device cannot be clobbered by a stale copy of a field this caller
--- never looked at (K2 from the Abendbrett review). The UPDATE is a single
--- atomic statement — no read-modify-write window.
+-- The edit form owns every column except id/crew_id/member_id/created_at, so
+-- this writes all of them in one atomic statement — no read-modify-write
+-- window (K2 from the Abendbrett review).
 create or replace function update_session(
   p_code_hash text,
   p_session_id uuid,
   p_session_date date,
   p_duration_seconds int,
   p_distance_m int,
+  p_avg_watts numeric,
+  p_avg_spm numeric,
   p_pace_per_500m_seconds numeric
 )
 returns public.sessions
@@ -239,6 +236,8 @@ begin
     session_date = p_session_date,
     duration_seconds = p_duration_seconds,
     distance_m = p_distance_m,
+    avg_watts = p_avg_watts,
+    avg_spm = p_avg_spm,
     pace_per_500m_seconds = p_pace_per_500m_seconds
   where id = p_session_id
     and crew_id = public.crew_id_for(p_code_hash)
@@ -279,7 +278,7 @@ grant execute on function
   list_members(text),
   add_member(text, text),
   list_sessions(text),
-  add_session(text, uuid, date, int, int, int, numeric, numeric, int),
-  update_session(text, uuid, date, int, int, numeric),
+  add_session(text, uuid, date, int, int, numeric, numeric, numeric),
+  update_session(text, uuid, date, int, int, numeric, numeric, numeric),
   delete_session(text, uuid)
 to anon;

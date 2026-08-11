@@ -87,10 +87,9 @@ export async function addSession(
       p_session_date: input.session_date,
       p_duration_seconds: input.duration_seconds,
       p_distance_m: input.distance_m,
-      p_total_strokes: input.total_strokes,
+      p_avg_watts: input.avg_watts,
       p_avg_spm: input.avg_spm,
       p_pace_per_500m_seconds: input.pace_per_500m_seconds,
-      p_resistance_level: input.resistance_level,
     })
     .single<Session>()
   if (error || !data) throw toApiError(error, 'Der Eintrag konnte nicht gespeichert werden.')
@@ -98,9 +97,8 @@ export async function addSession(
 }
 
 /**
- * Atomic partial update: the RPC writes exactly these four columns in one
- * statement, so there is no read-modify-write window and fields this caller
- * never edited cannot be clobbered by a stale local copy.
+ * Atomic update: the RPC writes every editable column in one statement, so
+ * there is no read-modify-write window.
  */
 export async function updateSession(
   codeHash: string,
@@ -114,6 +112,8 @@ export async function updateSession(
       p_session_date: input.session_date,
       p_duration_seconds: input.duration_seconds,
       p_distance_m: input.distance_m,
+      p_avg_watts: input.avg_watts,
+      p_avg_spm: input.avg_spm,
       p_pace_per_500m_seconds: input.pace_per_500m_seconds,
     })
     .single<Session>()

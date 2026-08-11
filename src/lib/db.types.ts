@@ -23,31 +23,32 @@ export interface Session {
   session_date: string
   duration_seconds: number
   distance_m: number
-  total_strokes: number | null
+  avg_watts: number | null
   avg_spm: number | null
   pace_per_500m_seconds: number | null
-  resistance_level: number | null
   created_at: string
 }
 
-/** What the entry form produces, before crew/member are attached by the RPC. */
-export interface NewSessionInput {
+/**
+ * The fields both the add and edit forms collect — duration, distance, average
+ * power and average stroke rate, plus the (overridable) computed pace. Add and
+ * edit use the same shape because update_session now writes every editable
+ * column in one statement rather than a partial subset.
+ */
+export interface SessionFormInput {
   session_date: string
   duration_seconds: number
   distance_m: number
-  total_strokes: number | null
+  avg_watts: number | null
   avg_spm: number | null
   pace_per_500m_seconds: number | null
-  resistance_level: number | null
 }
 
-/** The subset of columns the edit form owns; see update_session in schema.sql. */
-export interface SessionEditInput {
-  session_date: string
-  duration_seconds: number
-  distance_m: number
-  pace_per_500m_seconds: number | null
-}
+/** What the entry form produces, before crew/member are attached by the RPC. */
+export type NewSessionInput = SessionFormInput
+
+/** What the edit form produces; see update_session in schema.sql. */
+export type SessionEditInput = SessionFormInput
 
 /** Identity of this device: which crew, which member, and the crew credential. */
 export interface CrewIdentity {

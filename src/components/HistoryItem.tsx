@@ -27,6 +27,8 @@ export default function HistoryItem({
     date: session.session_date,
     duration: fmtDuration(session.duration_seconds),
     distance: String(session.distance_m),
+    watts: session.avg_watts != null ? String(session.avg_watts) : '',
+    spm: session.avg_spm != null ? String(session.avg_spm) : '',
   }))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,27 +36,29 @@ export default function HistoryItem({
     void onDelete(session.id)
   })
 
+  /** Blank means "not recorded", not zero. */
+  function optionalNumber(raw: string): number | null {
+    if (raw.trim() === '') return null
+    const value = Number(raw)
+    return Number.isFinite(value) ? value : Number.NaN
+  }
+
   async function saveEdit() {
     setError(null)
     const durationSeconds = parseDuration(form.duration)
     const distanceMeters = Number.parseInt(form.distance, 10)
 
-    // Validated against the same schema as new entries, minus the fields this
-    // form does not own; update_session leaves those columns untouched.
-    const parsed = sessionSchema
-      .pick({
-        session_date: true,
-        duration_seconds: true,
-        distance_m: true,
-        pace_per_500m_seconds: true,
-      })
-      .safeParse({
-        session_date: form.date,
-        duration_seconds: durationSeconds ?? Number.NaN,
-        distance_m: distanceMeters,
-        pace_per_500m_seconds:
-          durationSeconds && distanceMeters > 0 ? (durationSeconds / distanceMeters) * 500 : null,
-      })
+    // Same schema as new entries — update_session now writes every editable
+    // column in one statement, so edit and add share the exact same shape.
+    const parsed = sessionSchema.safeParse({
+      session_date: form.date,
+      duration_seconds: durationSeconds ?? Number.NaN,
+      distance_m: distanceMeters,
+      avg_watts: optionalNumber(form.watts),
+      avg_spm: optionalNumber(form.spm),
+      pace_per_500m_seconds:
+        durationSeconds && distanceMeters > 0 ? (durationSeconds / distanceMeters) * 500 : null,
+    })
 
     if (!parsed.success) {
       setError(firstError(parsed.error))
@@ -105,6 +109,25 @@ export default function HistoryItem({
             placeholder="Distanz (m)"
             value={form.distance}
             onChange={(e) => setForm((f) => ({ ...f, distance: e.target.value }))}
+          />
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1}
+            aria-label="Leistung in Watt"
+            placeholder="Watt"
+            value={form.watts}
+            onChange={(e) => setForm((f) => ({ ...f, watts: e.target.value }))}
+          />
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            aria-label="Schläge pro Minute"
+            placeholder="SPM"
+            value={form.spm}
+            onChange={(e) => setForm((f) => ({ ...f, spm: e.target.value }))}
           />
         </div>
         {error && <div className="gate-error" role="alert">{error}</div>}

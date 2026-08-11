@@ -31,10 +31,10 @@ export const sessionSchema = z.object({
     .min(1, 'Die Distanz muss größer als null sein.')
     .max(MAX_DISTANCE_M, 'Die Distanz ist unrealistisch hoch (max. 200 km).'),
 
-  total_strokes: z
-    .int('Ruderschläge müssen eine ganze Zahl sein.')
+  avg_watts: z
+    .number()
     .min(0)
-    .max(100000, 'Die Anzahl Ruderschläge ist unrealistisch hoch.')
+    .max(2000, 'Die Leistung ist unrealistisch hoch.')
     .nullable(),
 
   avg_spm: z
@@ -47,12 +47,6 @@ export const sessionSchema = z.object({
     .number()
     .min(1, 'Die Zeit pro 500 m muss größer als null sein.')
     .max(3600, 'Die Zeit pro 500 m ist unrealistisch hoch.')
-    .nullable(),
-
-  resistance_level: z
-    .int()
-    .min(1, 'Die Widerstandsstufe liegt zwischen 1 und 15.')
-    .max(15, 'Die Widerstandsstufe liegt zwischen 1 und 15.')
     .nullable(),
 })
 

@@ -15,13 +15,12 @@ interface FormState {
   date: string
   duration: string
   distance: string
-  strokes: string
+  watts: string
   spm: string
-  resistance: string
 }
 
 function emptyForm(): FormState {
-  return { date: todayIso(), duration: '', distance: '', strokes: '', spm: '', resistance: '' }
+  return { date: todayIso(), duration: '', distance: '', watts: '', spm: '' }
 }
 
 /** Parses an optional numeric field: blank means "not recorded", not zero. */
@@ -79,10 +78,9 @@ export default function EntryForm({ memberId, loadState, onAddSession, onToast }
       session_date: form.date,
       duration_seconds: durationSeconds ?? Number.NaN,
       distance_m: distanceMeters,
-      total_strokes: optionalNumber(form.strokes),
+      avg_watts: optionalNumber(form.watts),
       avg_spm: optionalNumber(form.spm),
       pace_per_500m_seconds: pace,
-      resistance_level: optionalNumber(form.resistance),
     }
 
     const parsed = sessionSchema.safeParse(candidate)
@@ -181,16 +179,16 @@ export default function EntryForm({ memberId, loadState, onAddSession, onToast }
 
           <div className="grid2">
             <div className="field">
-              <label htmlFor="f-strokes">Ruderschläge gesamt</label>
+              <label htmlFor="f-watts">Leistung Ø (Watt)</label>
               <input
-                id="f-strokes"
+                id="f-watts"
                 type="number"
                 inputMode="numeric"
                 min={0}
                 step={1}
-                placeholder="z.B. 820"
-                value={form.strokes}
-                onChange={(e) => update('strokes', e.target.value)}
+                placeholder="z.B. 145"
+                value={form.watts}
+                onChange={(e) => update('watts', e.target.value)}
               />
             </div>
             <div className="field">
@@ -205,21 +203,6 @@ export default function EntryForm({ memberId, loadState, onAddSession, onToast }
                 onChange={(e) => update('spm', e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="field">
-            <label htmlFor="f-resistance">Widerstandsstufe (1–15, optional)</label>
-            <input
-              id="f-resistance"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={15}
-              step={1}
-              placeholder="optional"
-              value={form.resistance}
-              onChange={(e) => update('resistance', e.target.value)}
-            />
           </div>
 
           {error && <div className="gate-error" role="alert">{error}</div>}
