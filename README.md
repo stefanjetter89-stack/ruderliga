@@ -71,7 +71,7 @@ src/
     leaderboard.ts  Ranglisten-Logik als reine Funktionen (testbar ohne React)
     format.ts       Dauer/Pace/Datum — lokale Zeitzone, kein UTC-Versatz
   hooks/            Datenhaltung, Ladezustände, Identität
-  components/       UI, nah am Mockup (ruderliga-mockup.html)
+  components/       UI, nah am Mockup (siehe docs/mockup.html)
 supabase/
   schema.sql        vollständiges Schema für ein neues Projekt
   migrations/       Änderungen für bestehende Datenbanken
