@@ -26,14 +26,20 @@
   --bg-2: #0a1416;
   --surface: #15272a;
   --surface-2: #1c3236;
-  --border: #24393d;
+  /* Lightened from #24393d for WCAG 1.4.11 non-text contrast (>=3:1 against
+     both --bg-2 and --surface, the two backgrounds it borders inputs/cards
+     on) — the original was 1.27-1.54:1, effectively invisible at rest. */
+  --border: #49747c;
   --wood: #c9873f;
   --wood-light: #e0a868;
   --water: #3fcfc0;
   --water-light: #7fe3d7;
   --text: #f2ede4;
   --text-dim: #9cb2b0;
-  --text-faint: #6b8280;
+  /* Lightened from #6b8280 for WCAG AA text contrast (>=4.5:1) — the original
+     was 3.78-4.34:1 against the backgrounds it actually appears on (field
+     labels, version number, unit hints), below the threshold for body text. */
+  --text-faint: #78928f;
   --gold: #e8b23d;
   --silver: #c7cdd1;
   --bronze: #b9793f;
