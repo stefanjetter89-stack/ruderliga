@@ -22,6 +22,7 @@ function session(memberId: string, date: string, duration: number, distance: num
     avg_spm: null,
     pace_per_500m_seconds: null,
     created_at: `2026-01-01T00:00:0${sessionCounter % 10}Z`,
+    updated_at: `2026-01-01T00:00:0${sessionCounter % 10}Z`,
   }
 }
 

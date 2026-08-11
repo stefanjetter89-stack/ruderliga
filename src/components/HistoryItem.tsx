@@ -3,6 +3,7 @@ import { fmtDate, fmtDuration, fmtPace, paceOf, parseDuration } from '../lib/for
 import { memberColor } from '../lib/memberColor'
 import { useTwoStepConfirm } from '../hooks/useTwoStepConfirm'
 import { firstError, sessionSchema } from '../lib/validation'
+import { ApiError } from '../lib/api'
 import type { Member, Session, SessionEditInput } from '../lib/db.types'
 
 interface HistoryItemProps {
@@ -10,8 +11,9 @@ interface HistoryItemProps {
   member: Member | undefined
   isPB: boolean
   canEdit: boolean
-  onUpdate: (sessionId: string, input: SessionEditInput) => Promise<Session>
+  onUpdate: (sessionId: string, expectedUpdatedAt: string, input: SessionEditInput) => Promise<Session>
   onDelete: (sessionId: string) => Promise<void>
+  onToast: (message: string) => void
 }
 
 export default function HistoryItem({
@@ -21,6 +23,7 @@ export default function HistoryItem({
   canEdit,
   onUpdate,
   onDelete,
+  onToast,
 }: HistoryItemProps) {
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(() => ({
@@ -29,6 +32,12 @@ export default function HistoryItem({
     distance: String(session.distance_m),
     watts: session.avg_watts != null ? String(session.avg_watts) : '',
     spm: session.avg_spm != null ? String(session.avg_spm) : '',
+    // Frozen at the moment editing starts — the optimistic-concurrency check
+    // must compare against what this form was actually built from, not
+    // whatever the session prop happens to be by the time it submits (a
+    // background refresh could otherwise silently move this forward and
+    // defeat the check).
+    updatedAt: session.updated_at,
   }))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -67,9 +76,18 @@ export default function HistoryItem({
 
     setBusy(true)
     try {
-      await onUpdate(session.id, parsed.data)
+      await onUpdate(session.id, form.updatedAt, parsed.data)
       setEditing(false)
     } catch (err) {
+      if (err instanceof ApiError && err.isConflict) {
+        // The other device's change already won and was pulled into local
+        // state by useSessions; continuing to edit this stale form would
+        // just invite overwriting it again. Drop back to the (now current)
+        // display view and say what happened, instead of a silent retry.
+        setEditing(false)
+        onToast(err.message)
+        return
+      }
       setError(err instanceof Error ? err.message : 'Speichern fehlgeschlagen.')
     } finally {
       setBusy(false)

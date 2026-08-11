@@ -81,6 +81,7 @@ function MainApp({ identity, onSwitchMember, onLeaveCrew }: MainAppProps) {
         members={members.members}
         currentMemberId={identity.memberId}
         onUpdate={sessions.updateSession}
+        onToast={showToast}
         onDelete={async (id) => {
           try {
             await sessions.deleteSession(id)

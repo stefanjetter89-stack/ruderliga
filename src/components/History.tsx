@@ -8,8 +8,9 @@ interface HistoryProps {
   sessions: Session[]
   members: Member[]
   currentMemberId: string
-  onUpdate: (sessionId: string, input: SessionEditInput) => Promise<Session>
+  onUpdate: (sessionId: string, expectedUpdatedAt: string, input: SessionEditInput) => Promise<Session>
   onDelete: (sessionId: string) => Promise<void>
+  onToast: (message: string) => void
 }
 
 export default function History({
@@ -18,6 +19,7 @@ export default function History({
   currentMemberId,
   onUpdate,
   onDelete,
+  onToast,
 }: HistoryProps) {
   const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members])
   const bests = useMemo(() => personalBests(sessions), [sessions])
@@ -40,6 +42,7 @@ export default function History({
             canEdit={s.member_id === currentMemberId}
             onUpdate={onUpdate}
             onDelete={onDelete}
+            onToast={onToast}
           />
         ))}
       </div>

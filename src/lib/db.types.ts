@@ -27,6 +27,8 @@ export interface Session {
   avg_spm: number | null
   pace_per_500m_seconds: number | null
   created_at: string
+  /** Bumped on every update_session write; used for the optimistic-concurrency check. */
+  updated_at: string
 }
 
 /**

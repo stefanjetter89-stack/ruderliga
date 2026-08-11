@@ -13,7 +13,7 @@ export interface UseSessions {
   error: string | null
   refresh: () => Promise<void>
   addSession: (memberId: string, input: NewSessionInput) => Promise<{ session: Session; isPB: boolean }>
-  updateSession: (sessionId: string, input: SessionEditInput) => Promise<Session>
+  updateSession: (sessionId: string, expectedUpdatedAt: string, input: SessionEditInput) => Promise<Session>
   deleteSession: (sessionId: string) => Promise<void>
 }
 
@@ -68,14 +68,22 @@ export function useSessions(codeHash: string | null): UseSessions {
   )
 
   const updateSession = useCallback(
-    async (sessionId: string, input: SessionEditInput) => {
+    async (sessionId: string, expectedUpdatedAt: string, input: SessionEditInput) => {
       if (!codeHash) throw new ApiError('Keine Crew aktiv.')
-      // Atomic server-side partial update — see api.updateSession.
-      const updated = await api.updateSession(codeHash, sessionId, input)
-      setSessions((prev) => sortSessions(prev.map((s) => (s.id === sessionId ? updated : s))))
-      return updated
+      try {
+        // Atomic, conflict-checked server-side update — see api.updateSession.
+        const updated = await api.updateSession(codeHash, sessionId, expectedUpdatedAt, input)
+        setSessions((prev) => sortSessions(prev.map((s) => (s.id === sessionId ? updated : s))))
+        return updated
+      } catch (err) {
+        // On a conflict, pull the row the other device actually wrote so the
+        // UI reflects reality instead of the stale copy the edit form had —
+        // this is what replaces the silent-overwrite behaviour (K2 fix).
+        if (err instanceof ApiError && err.isConflict) await refresh()
+        throw err
+      }
     },
-    [codeHash],
+    [codeHash, refresh],
   )
 
   const deleteSession = useCallback(

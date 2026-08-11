@@ -61,6 +61,11 @@ create table sessions (
   -- device's own display disagrees with the arithmetic.
   pace_per_500m_seconds numeric,
   created_at timestamptz not null default now(),
+  -- Bumped by update_session on every write; the edit form's optimistic-
+  -- concurrency check compares against this so a stale edit is rejected
+  -- instead of silently overwriting a concurrent change from the other
+  -- device (see update_session below).
+  updated_at timestamptz not null default now(),
 
   -- Bounds are deliberately generous — they exist to keep impossible data out
   -- of the leaderboard (a 0 m row makes pace Infinity and would take rank 1),
@@ -213,10 +218,21 @@ $$;
 
 -- The edit form owns every column except id/crew_id/member_id/created_at, so
 -- this writes all of them in one atomic statement — no read-modify-write
--- window (K2 from the Abendbrett review).
+-- window on the write itself.
+--
+-- Optimistic concurrency: p_expected_updated_at must match the row's current
+-- updated_at, checked in the UPDATE's WHERE clause so the compare-and-write is
+-- one atomic operation (not a separate SELECT then UPDATE, which would leave
+-- its own race between two concurrent callers). If a second device changed
+-- this session since the caller loaded it, zero rows match, nothing is
+-- written, and the caller is told to reload instead of blindly overwriting
+-- the other device's edit — this is the fix for the K2 data-loss pattern
+-- from the Abendbrett review, which the previous version of this function
+-- only described in a comment without actually implementing.
 create or replace function update_session(
   p_code_hash text,
   p_session_id uuid,
+  p_expected_updated_at timestamptz,
   p_session_date date,
   p_duration_seconds int,
   p_distance_m int,
@@ -230,6 +246,7 @@ security definer
 set search_path = ''
 as $$
 declare
+  v_crew_id uuid := public.crew_id_for(p_code_hash);
   v_session public.sessions;
 begin
   update public.sessions set
@@ -238,15 +255,23 @@ begin
     distance_m = p_distance_m,
     avg_watts = p_avg_watts,
     avg_spm = p_avg_spm,
-    pace_per_500m_seconds = p_pace_per_500m_seconds
+    pace_per_500m_seconds = p_pace_per_500m_seconds,
+    updated_at = now()
   where id = p_session_id
-    and crew_id = public.crew_id_for(p_code_hash)
+    and crew_id = v_crew_id
+    and updated_at = p_expected_updated_at
   returning * into v_session;
 
-  if v_session.id is null then
+  if v_session.id is not null then
+    return v_session;
+  end if;
+
+  -- The write matched nothing — find out why, only to give a precise error.
+  if exists (select 1 from public.sessions where id = p_session_id and crew_id = v_crew_id) then
+    raise exception 'session was changed by another device' using errcode = 'RL001';
+  else
     raise exception 'session not found in this crew' using errcode = 'P0002';
   end if;
-  return v_session;
 end;
 $$;
 
@@ -279,6 +304,6 @@ grant execute on function
   add_member(text, text),
   list_sessions(text),
   add_session(text, uuid, date, int, int, numeric, numeric, numeric),
-  update_session(text, uuid, date, int, int, numeric, numeric, numeric),
+  update_session(text, uuid, timestamptz, date, int, int, numeric, numeric, numeric),
   delete_session(text, uuid)
 to anon;

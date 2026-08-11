@@ -8,11 +8,19 @@ import type { Crew, Member, NewSessionInput, Session, SessionEditInput } from '.
 /** Error carrying a message already suitable for display to the user. */
 export class ApiError extends Error {
   readonly cause: unknown
+  /**
+   * Set when update_session rejected a write because the row changed since
+   * the caller loaded it (see supabase/schema.sql). Distinguishes "someone
+   * else edited this in the meantime" from an ordinary failure, so the UI can
+   * discard the stale edit and reload instead of showing a generic error.
+   */
+  readonly isConflict: boolean
 
-  constructor(message: string, cause?: unknown) {
+  constructor(message: string, cause?: unknown, isConflict = false) {
     super(message)
     this.name = 'ApiError'
     this.cause = cause
+    this.isConflict = isConflict
   }
 }
 
@@ -22,7 +30,10 @@ export class ApiError extends Error {
  * The technical detail is preserved in `cause` rather than shown: it is noise
  * to the user, and error strings from the database can echo back input.
  */
-function toApiError(error: { code?: string; message?: string } | null, fallback: string): ApiError {
+export function toApiError(
+  error: { code?: string; message?: string } | null,
+  fallback: string,
+): ApiError {
   if (error?.code === '28000') {
     return new ApiError('Zugriff verweigert — der Crew-Code ist ungültig.', error)
   }
@@ -31,6 +42,13 @@ function toApiError(error: { code?: string; message?: string } | null, fallback:
   }
   if (error?.code === 'P0002') {
     return new ApiError('Der Eintrag existiert nicht mehr — vermutlich auf einem anderen Gerät gelöscht.', error)
+  }
+  if (error?.code === 'RL001') {
+    return new ApiError(
+      'Dieser Eintrag wurde gerade auf einem anderen Gerät geändert. Die aktuellen Werte wurden geladen — bitte einmal prüfen und ggf. erneut bearbeiten.',
+      error,
+      true,
+    )
   }
   if (error?.code === '23514') {
     return new ApiError('Die Werte liegen außerhalb des zulässigen Bereichs.', error)
@@ -97,18 +115,23 @@ export async function addSession(
 }
 
 /**
- * Atomic update: the RPC writes every editable column in one statement, so
- * there is no read-modify-write window.
+ * Atomic, conflict-checked update: the RPC writes every editable column in
+ * one statement, and only if `expectedUpdatedAt` still matches the row's
+ * current `updated_at` — otherwise it rejects with a conflict error rather
+ * than overwriting whatever the other device just changed (see
+ * update_session in schema.sql).
  */
 export async function updateSession(
   codeHash: string,
   sessionId: string,
+  expectedUpdatedAt: string,
   input: SessionEditInput,
 ): Promise<Session> {
   const { data, error } = await supabase
     .rpc('update_session', {
       p_code_hash: codeHash,
       p_session_id: sessionId,
+      p_expected_updated_at: expectedUpdatedAt,
       p_session_date: input.session_date,
       p_duration_seconds: input.duration_seconds,
       p_distance_m: input.distance_m,
