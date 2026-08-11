@@ -1,16 +1,112 @@
-# React + Vite
+# Ruderliga
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Gemeinsame Trainings-Rangliste für zwei (oder mehr) Leute am **Domyos Woodrower**.
+Werte werden nach jeder Einheit vom Gerätedisplay abgetippt; daraus entsteht eine
+Rangliste zum Vergleichen und Motivieren.
 
-Currently, two official plugins are available:
+**Live:** https://stefanjetter89-stack.github.io/ruderliga/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Wie der Zugriffsschutz funktioniert
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Es gibt keinen Login. Die einzige Zugangsberechtigung ist der **Crew-Code**.
 
-## Expanding the Oxlint configuration
+- Der Code wird clientseitig mit SHA-256 gehasht; nur der Hash erreicht die Datenbank.
+- Die Tabellen haben RLS aktiviert und **keine Policies** — über die REST-API sind
+  sie damit vollständig geschlossen.
+- Jeder Zugriff läuft über `security definer`-Funktionen, die bei jedem Aufruf den
+  Code-Hash entgegennehmen und die Crew daraus auflösen. Ohne gültigen Code gibt es
+  keine Zeilen — auch nicht mit dem öffentlichen anon-Key.
+- Eine `crew_id` allein ist deshalb wertlos: Raten oder Erbeuten einer UUID bringt
+  ohne den zugehörigen Code nichts.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Der Code hat ~49 Bit Entropie (10 Zeichen aus einem 30er-Alphabet, aus dem CSPRNG),
+ist also nicht durchprobierbar. **Er ist nicht wiederherstellbar** — geht er auf
+allen Geräten verloren, ist die Crew nicht mehr erreichbar. Deshalb wird er lokal
+gespeichert und ist jederzeit unter *Einstellungen* einsehbar.
+
+Der anon-Key im Bundle ist übrigens **kein Geheimnis** und muss nicht rotiert werden:
+Bei Supabase identifiziert er nur das Projekt. Die Schutzschicht ist das Schema.
+
+## Setup
+
+```bash
+npm install
+cp .env.local.example .env.local   # eigene Supabase-Werte eintragen
+npm run dev
+```
+
+Für ein frisches Supabase-Projekt: den Inhalt von [`supabase/schema.sql`](supabase/schema.sql)
+im SQL-Editor ausführen. Eine bestehende v1-Datenbank wird stattdessen mit
+[`supabase/migrations/001_lockdown.sql`](supabase/migrations/001_lockdown.sql) aktualisiert.
+
+Benötigte Umgebungsvariablen (lokal in `.env.local`, in CI als GitHub Secrets):
+
+| Variable | Woher |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
+| `VITE_SUPABASE_ANON_KEY` | ebenda → `anon` / `public` key (**nicht** `service_role`) |
+
+## Kommandos
+
+```bash
+npm run dev        # Dev-Server
+npm run build      # Typecheck + Produktions-Build
+npm run typecheck  # nur tsc
+npm run lint       # oxlint
+npm test           # Vitest (Kernlogik)
+```
+
+## Architektur
+
+```
+src/
+  lib/
+    api.ts          Datenschicht — ausschließlich RPC-Aufrufe, typisiert
+    crewCode.ts     Code-Erzeugung (CSPRNG) und Hashing
+    validation.ts   Zod-Schemata, spiegeln die CHECK-Constraints der DB
+    leaderboard.ts  Ranglisten-Logik als reine Funktionen (testbar ohne React)
+    format.ts       Dauer/Pace/Datum — lokale Zeitzone, kein UTC-Versatz
+  hooks/            Datenhaltung, Ladezustände, Identität
+  components/       UI, nah am Mockup (ruderliga-mockup.html)
+supabase/
+  schema.sql        vollständiges Schema für ein neues Projekt
+  migrations/       Änderungen für bestehende Datenbanken
+```
+
+Ein paar Entscheidungen, die nicht aus dem Code hervorgehen:
+
+- **Identität statt Auswahlfeld.** Wer eintragt, wird beim Crew-Beitritt einmalig
+  festgelegt und lokal gemerkt. Kein „Wer war das?"-Dropdown pro Eintrag; ein Wechsel
+  passiert nur bewusst über die Einstellungen.
+- **Keine Kalorien, kein Puls.** Beides hängt an Gewicht und Fitnesslevel und ist
+  zwischen zwei Personen nicht fair vergleichbar — es würde die leichtere Person
+  bei gleicher Anstrengung bevorteilen. Deshalb weder erfasst noch gewertet.
+- **Zeit/500 m ist überschreibbar.** Der Wert wird aus Dauer und Distanz berechnet,
+  lässt sich vor dem Speichern aber korrigieren, falls das Gerätedisplay abweicht.
+- **Schreiben erst nach bestätigtem Laden.** Das Eintragsformular bleibt gesperrt,
+  bis die Daten der Crew geladen sind, damit ein Schreibvorgang nie einem
+  unvollständigen Stand vorauseilt.
+- **Bearbeiten ist ein atomares Teil-Update.** `update_session` schreibt genau die
+  vier Spalten des Formulars in einem Statement — kein Read-Modify-Write, und
+  Felder, die dieses Gerät nie angesehen hat, können nicht überschrieben werden.
+
+### Bekannte Grenzen
+
+- Ruderschläge, Schlagfrequenz und Widerstandsstufe lassen sich beim Anlegen
+  erfassen, aber nachträglich nicht mehr ändern (nur Datum, Dauer, Distanz).
+- Kein Echtzeit-Abgleich: Einträge des anderen Geräts erscheinen beim
+  Fenster-Fokus, nicht sofort.
+- Wer die Mitgliedschaft in einer Crew hat, kann jeden Eintrag dieser Crew sehen;
+  bearbeiten und löschen darf man nur die eigenen.
+
+## Deployment
+
+Push auf `main` → GitHub Actions baut und veröffentlicht auf GitHub Pages.
+Die beiden `VITE_*`-Werte müssen als Repository-Secrets hinterlegt sein.
+
+## Nicht-Ziele
+
+Keine Geräte-Anbindung (Bluetooth/Kinomap), kein Supabase Auth, keine Trainingspläne,
+keine Notizen, keine Fotos, keine Kalorien-/Pulserfassung.

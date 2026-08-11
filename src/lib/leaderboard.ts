@@ -1,0 +1,104 @@
+import type { Member, Session } from './db.types'
+import { fmtPace, paceOf, withinDays, withinPeriod, type Period } from './format'
+
+// Ranking logic, kept as pure functions so it can be tested without React.
+//
+// Only metrics that are fair between two different people are here — no
+// calories, no heart rate: both depend on body weight and fitness level and
+// would rank the lighter person higher for the same effort.
+
+export type Category = 'pace' | 'distance' | 'freq'
+
+export interface LeaderboardRow {
+  member: Member
+  /** Sort key; unit depends on category. */
+  value: number
+  /** Preformatted main figure. */
+  display: string
+  /** Secondary line under the name. */
+  unit: string
+}
+
+export interface LeaderboardOptions {
+  sessions: Session[]
+  members: Member[]
+  category: Category
+  period: Period
+  /** Rolling window in days, used by the `freq` category only. */
+  freqWindow: number
+  /** Injectable for tests. */
+  now?: Date
+}
+
+export function computeLeaderboard({
+  sessions,
+  members,
+  category,
+  period,
+  freqWindow,
+  now = new Date(),
+}: LeaderboardOptions): LeaderboardRow[] {
+  if (category === 'freq') {
+    // Frequency is explicitly a rolling window, so it ignores the period filter.
+    return members
+      .map((member) => {
+        const count = sessions.filter(
+          (s) => s.member_id === member.id && withinDays(s.session_date, freqWindow, now),
+        ).length
+        return {
+          member,
+          value: count,
+          display: `${count}x`,
+          unit: `letzte ${freqWindow} Tage`,
+        }
+      })
+      .sort((a, b) => b.value - a.value || a.member.display_name.localeCompare(b.member.display_name))
+  }
+
+  const scoped = sessions.filter((s) => withinPeriod(s.session_date, period, now))
+
+  if (category === 'pace') {
+    return members
+      .map((member) => {
+        const own = scoped.filter((s) => s.member_id === member.id)
+        if (own.length === 0) return null
+        const best = Math.min(...own.map(paceOf))
+        return { member, value: best, display: fmtPace(best), unit: 'min/500m' }
+      })
+      .filter((row): row is LeaderboardRow => row !== null)
+      // Ascending: faster is better.
+      .sort((a, b) => a.value - b.value || a.member.display_name.localeCompare(b.member.display_name))
+  }
+
+  return members
+    .map((member) => {
+      const own = scoped.filter((s) => s.member_id === member.id)
+      const sum = own.reduce((total, s) => total + s.distance_m, 0)
+      return {
+        member,
+        value: sum,
+        display: `${(sum / 1000).toFixed(1)} km`,
+        unit: `${own.length} ${own.length === 1 ? 'Session' : 'Sessions'}`,
+      }
+    })
+    .sort((a, b) => b.value - a.value || a.member.display_name.localeCompare(b.member.display_name))
+}
+
+/** The crew's overall fastest session, for the hero display. */
+export function crewRecord(sessions: Session[]): Session | null {
+  return sessions.reduce<Session | null>(
+    (best, s) => (best === null || paceOf(s) < paceOf(best) ? s : best),
+    null,
+  )
+}
+
+/** Fastest pace per member, used to mark personal bests in the history list. */
+export function personalBests(sessions: Session[]): Map<string, number> {
+  const best = new Map<string, number>()
+  for (const s of sessions) {
+    const pace = paceOf(s)
+    const current = best.get(s.member_id)
+    if (current === undefined || pace < current) best.set(s.member_id, pace)
+  }
+  return best
+}
