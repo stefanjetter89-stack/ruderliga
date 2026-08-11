@@ -208,9 +208,14 @@ export default function EntryForm({ memberId, loadState, onAddSession, onToast }
 
           {error && <div className="gate-error" role="alert">{error}</div>}
 
-          <button type="submit" className="submit-btn" disabled={busy}>
-            {busy ? 'Speichere …' : 'Eintrag speichern'}
-          </button>
+          <div className="edit-actions">
+            <button type="button" className="link-btn" onClick={() => setOpen(false)}>
+              Abbrechen
+            </button>
+            <button type="submit" className="submit-btn" disabled={busy}>
+              {busy ? 'Speichere …' : 'Eintrag speichern'}
+            </button>
+          </div>
         </form>
       )}
     </>

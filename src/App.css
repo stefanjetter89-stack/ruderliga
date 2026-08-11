@@ -389,6 +389,16 @@ header {
   outline: none;
   border-color: var(--water);
 }
+/* iOS Safari's native date-picker control has its own intrinsic width and
+   ignores width: 100% from its box, overflowing narrower containers like
+   this panel. Resetting its appearance makes it respect the box like any
+   other input. */
+input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+}
 .pace-preview {
   background: var(--bg-2);
   border: 1px dashed var(--border);
