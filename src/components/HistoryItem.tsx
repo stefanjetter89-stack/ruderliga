@@ -110,9 +110,10 @@ export default function HistoryItem({
             value={form.date}
             onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
           />
+          {/* No inputMode="numeric": that keypad has no colon on iOS/Android,
+              which would make "mm:ss" impossible to type. */}
           <input
             type="text"
-            inputMode="numeric"
             aria-label="Dauer in mm:ss"
             placeholder="mm:ss"
             value={form.duration}

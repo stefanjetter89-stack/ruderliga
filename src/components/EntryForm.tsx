@@ -140,10 +140,11 @@ export default function EntryForm({ memberId, loadState, onAddSession, onToast }
           <div className="grid2">
             <div className="field">
               <label htmlFor="f-duration">Dauer (mm:ss)</label>
+              {/* No inputMode="numeric": that keypad has no colon on iOS/Android,
+                  which would make "mm:ss" impossible to type. */}
               <input
                 id="f-duration"
                 type="text"
-                inputMode="numeric"
                 placeholder="z.B. 20:00"
                 value={form.duration}
                 onChange={(e) => update('duration', e.target.value)}
@@ -166,11 +167,11 @@ export default function EntryForm({ memberId, loadState, onAddSession, onToast }
 
           <div className="pace-preview">
             <label htmlFor="f-pace">Zeit/500m (auto-berechnet, überschreibbar)</label>
+            {/* No inputMode="numeric" — see the Dauer field above. */}
             <input
               id="f-pace"
               className="pace-override mono"
               type="text"
-              inputMode="numeric"
               placeholder={computedPace ? fmtPace(computedPace) : '–:––'}
               value={paceOverride}
               onChange={(e) => setPaceOverride(e.target.value)}
