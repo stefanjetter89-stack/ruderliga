@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import * as api from '../lib/api'
 import { ApiError } from '../lib/api'
 import type { Member } from '../lib/db.types'
+import { useRefreshOnFocus } from './useRefreshOnFocus'
 
 export type LoadState = 'idle' | 'loading' | 'ready' | 'error'
 
@@ -40,6 +41,11 @@ export function useCrewMembers(codeHash: string | null): UseCrewMembers {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  // Must refresh alongside the sessions: a member who joined from the other
+  // device owns sessions that arrive with the next session refresh, and without
+  // their row those entries render with no name and drop out of the ranking.
+  useRefreshOnFocus(() => void refresh())
 
   const addLocal = useCallback((member: Member) => {
     setMembers((prev) => (prev.some((m) => m.id === member.id) ? prev : [...prev, member]))
