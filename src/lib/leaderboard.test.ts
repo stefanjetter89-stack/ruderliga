@@ -9,7 +9,13 @@ function member(id: string, name: string): Member {
 }
 
 let sessionCounter = 0
-function session(memberId: string, date: string, duration: number, distance: number): Session {
+function session(
+  memberId: string,
+  date: string,
+  duration: number,
+  distance: number,
+  watts: number | null = null,
+): Session {
   sessionCounter += 1
   return {
     id: `s${sessionCounter}`,
@@ -18,7 +24,7 @@ function session(memberId: string, date: string, duration: number, distance: num
     session_date: date,
     duration_seconds: duration,
     distance_m: distance,
-    avg_watts: null,
+    avg_watts: watts,
     avg_spm: null,
     pace_per_500m_seconds: null,
     created_at: `2026-01-01T00:00:0${sessionCounter % 10}Z`,
@@ -136,6 +142,86 @@ describe('computeLeaderboard — distance', () => {
     })
     expect(rows).toHaveLength(2)
     expect(rows[1]?.display).toBe('0.0 km')
+  })
+})
+
+describe('computeLeaderboard — watts', () => {
+  it('ranks the highest single-session average power first', () => {
+    const sessions = [
+      session('m1', '2026-08-10', 1200, 4500, 150),
+      session('m2', '2026-08-10', 1200, 5000, 180), // higher — wins
+    ]
+    const rows = computeLeaderboard({
+      sessions,
+      members,
+      category: 'watts',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(rows.map((r) => r.member.display_name)).toEqual(['Julia', 'Stefan'])
+    expect(rows[0]?.display).toBe('180 W')
+  })
+
+  it('uses each member’s best session, not an average of averages', () => {
+    const sessions = [
+      session('m1', '2026-08-10', 1200, 5000, 120), // lower
+      session('m1', '2026-08-11', 1200, 5000, 190), // the best
+    ]
+    const rows = computeLeaderboard({
+      sessions,
+      members: [stefan],
+      category: 'watts',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(rows[0]?.value).toBe(190)
+  })
+
+  it('excludes sessions with no recorded power instead of treating them as 0 W', () => {
+    const rows = computeLeaderboard({
+      sessions: [session('m1', '2026-08-10', 1200, 5000, null)],
+      members: [stefan],
+      category: 'watts',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(rows).toHaveLength(0)
+  })
+
+  it('omits a member entirely if none of their sessions recorded power', () => {
+    const sessions = [
+      session('m1', '2026-08-10', 1200, 5000, 150),
+      session('m2', '2026-08-10', 1200, 5000, null),
+    ]
+    const rows = computeLeaderboard({
+      sessions,
+      members,
+      category: 'watts',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.member.display_name).toBe('Stefan')
+  })
+
+  it('honours the period filter like pace and distance do', () => {
+    const sessions = [
+      session('m1', '2026-07-15', 1200, 5000, 200), // last month, higher
+      session('m1', '2026-08-11', 1200, 5000, 150), // this month
+    ]
+    const thisMonth = computeLeaderboard({
+      sessions,
+      members: [stefan],
+      category: 'watts',
+      period: 'month',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(thisMonth[0]?.value).toBe(150)
   })
 })
 

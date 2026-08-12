@@ -7,7 +7,7 @@ import { fmtPace, paceOf, withinDays, withinPeriod, type Period } from './format
 // calories, no heart rate: both depend on body weight and fitness level and
 // would rank the lighter person higher for the same effort.
 
-export type Category = 'pace' | 'distance' | 'freq'
+export type Category = 'pace' | 'distance' | 'freq' | 'watts'
 
 export interface LeaderboardRow {
   member: Member
@@ -68,6 +68,20 @@ export function computeLeaderboard({
       .filter((row): row is LeaderboardRow => row !== null)
       // Ascending: faster is better.
       .sort((a, b) => a.value - b.value || a.member.display_name.localeCompare(b.member.display_name))
+  }
+
+  if (category === 'watts') {
+    return members
+      .map((member) => {
+        // Sessions where power wasn't recorded don't count as a 0 W result.
+        const own = scoped.filter((s) => s.member_id === member.id && s.avg_watts != null)
+        if (own.length === 0) return null
+        const best = Math.max(...own.map((s) => s.avg_watts as number))
+        return { member, value: best, display: `${Math.round(best)} W`, unit: 'beste Einheit' }
+      })
+      .filter((row): row is LeaderboardRow => row !== null)
+      // Descending: more power is better.
+      .sort((a, b) => b.value - a.value || a.member.display_name.localeCompare(b.member.display_name))
   }
 
   return members

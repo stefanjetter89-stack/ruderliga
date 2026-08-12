@@ -173,6 +173,8 @@ export default function HistoryItem({
         <div className="t">
           <b>{member ? member.display_name : '–'}</b> — {(session.distance_m / 1000).toFixed(1)}km in{' '}
           {fmtDuration(session.duration_seconds)} · {fmtPace(paceOf(session))}/500m
+          {session.avg_watts != null && ` · ${Math.round(session.avg_watts)}W`}
+          {session.avg_spm != null && ` · ${Math.round(session.avg_spm)} spm`}
         </div>
         <div className="d">{fmtDate(session.session_date)}</div>
       </div>
