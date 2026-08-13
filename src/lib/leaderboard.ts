@@ -1,5 +1,6 @@
 import type { Member, Session } from './db.types'
 import { fmtPace, paceOf, withinDays, withinPeriod, type Period } from './format'
+import { energyWh, fmtEnergy, phoneCharges } from './energy'
 
 // Ranking logic, kept as pure functions so it can be tested without React.
 //
@@ -7,7 +8,7 @@ import { fmtPace, paceOf, withinDays, withinPeriod, type Period } from './format
 // calories, no heart rate: both depend on body weight and fitness level and
 // would rank the lighter person higher for the same effort.
 
-export type Category = 'pace' | 'distance' | 'freq' | 'watts'
+export type Category = 'pace' | 'distance' | 'freq' | 'watts' | 'energy'
 
 export interface LeaderboardRow {
   member: Member
@@ -81,6 +82,25 @@ export function computeLeaderboard({
       })
       .filter((row): row is LeaderboardRow => row !== null)
       // Descending: more power is better.
+      .sort((a, b) => b.value - a.value || a.member.display_name.localeCompare(b.member.display_name))
+  }
+
+  if (category === 'energy') {
+    return members
+      .map((member) => {
+        const own = scoped.filter((s) => s.member_id === member.id)
+        // Sessions without a recorded watt value contribute 0, same as
+        // distance includes every member (even at 0) rather than omitting
+        // anyone who hasn't logged power yet.
+        const sum = own.reduce((total, s) => total + (energyWh(s) ?? 0), 0)
+        const charges = phoneCharges(sum)
+        return {
+          member,
+          value: sum,
+          display: fmtEnergy(sum),
+          unit: `🔋 ≈ ${charges} Handy-${charges === 1 ? 'Ladung' : 'Ladungen'}`,
+        }
+      })
       .sort((a, b) => b.value - a.value || a.member.display_name.localeCompare(b.member.display_name))
   }
 

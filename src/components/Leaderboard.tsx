@@ -9,6 +9,7 @@ const CATEGORIES: ReadonlyArray<{ key: Category; label: string }> = [
   { key: 'distance', label: 'Gesamtdistanz' },
   { key: 'freq', label: 'Trainingsfrequenz' },
   { key: 'watts', label: 'Bestleistung' },
+  { key: 'energy', label: 'Erruderte Energie' },
 ]
 
 const PERIODS: ReadonlyArray<{ key: Period; label: string }> = [

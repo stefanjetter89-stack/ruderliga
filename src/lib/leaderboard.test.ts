@@ -225,6 +225,108 @@ describe('computeLeaderboard — watts', () => {
   })
 })
 
+describe('computeLeaderboard — energy', () => {
+  it('sums power × time across sessions, unlike a single best value', () => {
+    const sessions = [
+      // 150 W for 20 min = 50 Wh
+      session('m1', '2026-08-10', 1200, 5000, 150),
+      // 150 W for 30 min = 75 Wh — same power, more Wh because it's longer
+      session('m1', '2026-08-11', 1800, 5000, 150),
+    ]
+    const rows = computeLeaderboard({
+      sessions,
+      members: [stefan],
+      category: 'energy',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(rows[0]?.value).toBeCloseTo(125, 5)
+    expect(rows[0]?.display).toBe('125 Wh')
+  })
+
+  it('ranks a longer, lower-power session above a shorter, higher-power one when it produced more total energy', () => {
+    // This is the exact case Bestleistung gets "wrong": the sprint has the
+    // higher average watts but the steady row did more total work.
+    const sprint = session('m1', '2026-08-10', 300, 1500, 300) // 5 min @ 300W = 25 Wh
+    const steady = session('m2', '2026-08-10', 2400, 8000, 120) // 40 min @ 120W = 80 Wh
+    const rows = computeLeaderboard({
+      sessions: [sprint, steady],
+      members,
+      category: 'energy',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(rows.map((r) => r.member.display_name)).toEqual(['Julia', 'Stefan'])
+  })
+
+  it('includes every member at 0 Wh rather than omitting those without recorded power', () => {
+    const rows = computeLeaderboard({
+      sessions: [session('m1', '2026-08-10', 1200, 5000, null)],
+      members,
+      category: 'energy',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(rows).toHaveLength(2)
+    expect(rows.find((r) => r.member.display_name === 'Julia')?.display).toBe('0 Wh')
+  })
+
+  it('shows the phone-charge equivalent, correctly pluralized', () => {
+    const singular = computeLeaderboard({
+      sessions: [session('m1', '2026-08-10', 3600, 5000, 12)], // 1h @ 12W = 12 Wh = 1 charge
+      members: [stefan],
+      category: 'energy',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(singular[0]?.unit).toBe('🔋 ≈ 1 Handy-Ladung')
+
+    const plural = computeLeaderboard({
+      sessions: [session('m1', '2026-08-10', 1200, 5000, 150)], // 50 Wh ≈ 4 charges
+      members: [stefan],
+      category: 'energy',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(plural[0]?.unit).toBe('🔋 ≈ 4 Handy-Ladungen')
+  })
+
+  it('formats totals of 1000 Wh and above as kWh', () => {
+    // 20 sessions × 60 Wh = 1200 Wh
+    const sessions = Array.from({ length: 20 }, () => session('m1', '2026-08-10', 1200, 5000, 180))
+    const rows = computeLeaderboard({
+      sessions,
+      members: [stefan],
+      category: 'energy',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(rows[0]?.display).toBe('1.2 kWh')
+  })
+
+  it('honours the period filter like the other cumulative categories', () => {
+    const sessions = [
+      session('m1', '2026-07-15', 1200, 5000, 150), // last month
+      session('m1', '2026-08-11', 1200, 5000, 150), // this month
+    ]
+    const thisMonth = computeLeaderboard({
+      sessions,
+      members: [stefan],
+      category: 'energy',
+      period: 'month',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(thisMonth[0]?.value).toBeCloseTo(50, 5)
+  })
+})
+
 describe('computeLeaderboard — frequency', () => {
   it('counts sessions inside the rolling window', () => {
     const sessions = [
