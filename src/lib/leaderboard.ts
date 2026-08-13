@@ -1,6 +1,6 @@
 import type { Member, Session } from './db.types'
 import { fmtPace, paceOf, withinDays, withinPeriod, type Period } from './format'
-import { energyWh, fmtEnergy, phoneCharges } from './energy'
+import { energyEquivalent, energyWh, fmtEnergy } from './energy'
 
 // Ranking logic, kept as pure functions so it can be tested without React.
 //
@@ -93,12 +93,11 @@ export function computeLeaderboard({
         // distance includes every member (even at 0) rather than omitting
         // anyone who hasn't logged power yet.
         const sum = own.reduce((total, s) => total + (energyWh(s) ?? 0), 0)
-        const charges = phoneCharges(sum)
         return {
           member,
           value: sum,
           display: fmtEnergy(sum),
-          unit: `🔋 ≈ ${charges} Handy-${charges === 1 ? 'Ladung' : 'Ladungen'}`,
+          unit: energyEquivalent(sum),
         }
       })
       .sort((a, b) => b.value - a.value || a.member.display_name.localeCompare(b.member.display_name))

@@ -274,26 +274,29 @@ describe('computeLeaderboard — energy', () => {
     expect(rows.find((r) => r.member.display_name === 'Julia')?.display).toBe('0 Wh')
   })
 
-  it('shows the phone-charge equivalent, correctly pluralized', () => {
+  it('shows the tiered energy-equivalent unit, correctly pluralized', () => {
+    // The tier logic itself is unit-tested exhaustively in energy.test.ts —
+    // this just checks the leaderboard actually wires the cumulative sum
+    // into it, not a specific session's value.
     const singular = computeLeaderboard({
-      sessions: [session('m1', '2026-08-10', 3600, 5000, 12)], // 1h @ 12W = 12 Wh = 1 charge
+      sessions: [session('m1', '2026-08-10', 3600, 5000, 15)], // 1h @ 15W = 15 Wh = 1 Handlampen-Ladung
       members: [stefan],
       category: 'energy',
       period: 'all',
       freqWindow: 7,
       now: NOW,
     })
-    expect(singular[0]?.unit).toBe('🔋 ≈ 1 Handy-Ladung')
+    expect(singular[0]?.unit).toBe('🔦 ≈ 1 Handlampen-Ladung')
 
     const plural = computeLeaderboard({
-      sessions: [session('m1', '2026-08-10', 1200, 5000, 150)], // 50 Wh ≈ 4 charges
+      sessions: [session('m1', '2026-08-10', 1200, 5000, 150)], // 50 Wh ≈ 3 Handlampen-Ladungen
       members: [stefan],
       category: 'energy',
       period: 'all',
       freqWindow: 7,
       now: NOW,
     })
-    expect(plural[0]?.unit).toBe('🔋 ≈ 4 Handy-Ladungen')
+    expect(plural[0]?.unit).toBe('🔦 ≈ 3 Handlampen-Ladungen')
   })
 
   it('formats totals of 1000 Wh and above as kWh', () => {
