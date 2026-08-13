@@ -92,18 +92,46 @@ export default function Leaderboard({ sessions, members }: LeaderboardProps) {
         )}
         {rows.map((row, i) => (
           <div key={row.member.id} className={`card rank-${i + 1}`}>
-            <div className="rank mono" aria-label={`Platz ${i + 1}`}>
-              {i + 1}
-            </div>
-            <div className="card-name">
-              <div className="n" style={{ color: memberColor(row.member.id) }}>
-                {row.member.display_name}
+            <div className="card-main">
+              <div className="rank mono" aria-label={`Platz ${i + 1}`}>
+                {i + 1}
               </div>
-              <div className="s">{row.unit}</div>
+              <div className="card-name">
+                <div className="n" style={{ color: memberColor(row.member.id) }}>
+                  {row.member.display_name}
+                </div>
+                <div className="s">{row.unit}</div>
+              </div>
+              <div className="card-value">
+                <div className="v mono">{row.display}</div>
+              </div>
             </div>
-            <div className="card-value">
-              <div className="v mono">{row.display}</div>
-            </div>
+            {row.progress && (
+              <div className="card-progress">
+                <div
+                  className="card-progress-track"
+                  role="progressbar"
+                  aria-valuenow={Math.round(row.progress.fraction * 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={
+                    row.progress.nextLabel
+                      ? `Fortschritt bis ${row.progress.nextLabel}`
+                      : 'Höchste Stufe erreicht'
+                  }
+                >
+                  <div
+                    className="card-progress-fill"
+                    style={{ width: `${row.progress.fraction * 100}%` }}
+                  />
+                </div>
+                <div className="card-progress-caption">
+                  {row.progress.nextLabel
+                    ? `noch ${Math.round((1 - row.progress.fraction) * 100)}% bis ${row.progress.nextLabel}`
+                    : '🏆 höchste Stufe erreicht'}
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

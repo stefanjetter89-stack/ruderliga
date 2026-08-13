@@ -279,7 +279,7 @@ describe('computeLeaderboard — energy', () => {
     // this just checks the leaderboard actually wires the cumulative sum
     // into it, not a specific session's value.
     const singular = computeLeaderboard({
-      sessions: [session('m1', '2026-08-10', 3600, 5000, 15)], // 1h @ 15W = 15 Wh = 1 Handlampen-Ladung
+      sessions: [session('m1', '2026-08-10', 3600, 5000, 25)], // 1h @ 25W = 25 Wh = 1 Handlampen-Ladung
       members: [stefan],
       category: 'energy',
       period: 'all',
@@ -289,14 +289,14 @@ describe('computeLeaderboard — energy', () => {
     expect(singular[0]?.unit).toBe('🔦 ≈ 1 Handlampen-Ladung')
 
     const plural = computeLeaderboard({
-      sessions: [session('m1', '2026-08-10', 1200, 5000, 150)], // 50 Wh ≈ 3 Handlampen-Ladungen
+      sessions: [session('m1', '2026-08-10', 1200, 5000, 150)], // 20 min @ 150W = 50 Wh ≈ 2 Handlampen-Ladungen
       members: [stefan],
       category: 'energy',
       period: 'all',
       freqWindow: 7,
       now: NOW,
     })
-    expect(plural[0]?.unit).toBe('🔦 ≈ 3 Handlampen-Ladungen')
+    expect(plural[0]?.unit).toBe('🔦 ≈ 2 Handlampen-Ladungen')
   })
 
   it('formats totals of 1000 Wh and above as kWh', () => {
@@ -327,6 +327,39 @@ describe('computeLeaderboard — energy', () => {
       now: NOW,
     })
     expect(thisMonth[0]?.value).toBeCloseTo(50, 5)
+  })
+
+  it('attaches progress-toward-next-tier information to each row', () => {
+    // 30 min @ 100W = 50 Wh — inside the Handfunkgerät(10)->Handlampen(25)
+    // ->Wärmebildkamera(60) run, currently in the Handlampen span.
+    const rows = computeLeaderboard({
+      sessions: [session('m1', '2026-08-10', 1800, 5000, 100)],
+      members: [stefan],
+      category: 'energy',
+      period: 'all',
+      freqWindow: 7,
+      now: NOW,
+    })
+    expect(rows[0]?.progress?.nextLabel).toBe('📷 Wärmebildkamera-Ladung')
+    expect(rows[0]?.progress?.fraction).toBeGreaterThan(0)
+    expect(rows[0]?.progress?.fraction).toBeLessThan(1)
+  })
+})
+
+describe('computeLeaderboard — progress is energy-only', () => {
+  it('leaves progress unset for every other category', () => {
+    const sessions = [session('m1', '2026-08-10', 1200, 4500, 150)]
+    for (const category of ['pace', 'distance', 'watts', 'freq'] as const) {
+      const rows = computeLeaderboard({
+        sessions,
+        members: [stefan],
+        category,
+        period: 'all',
+        freqWindow: 7,
+        now: NOW,
+      })
+      expect(rows[0]?.progress).toBeUndefined()
+    }
   })
 })
 

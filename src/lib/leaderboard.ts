@@ -1,6 +1,6 @@
 import type { Member, Session } from './db.types'
 import { fmtPace, paceOf, withinDays, withinPeriod, type Period } from './format'
-import { energyEquivalent, energyWh, fmtEnergy } from './energy'
+import { energyEquivalent, energyProgress, energyWh, fmtEnergy } from './energy'
 
 // Ranking logic, kept as pure functions so it can be tested without React.
 //
@@ -18,6 +18,11 @@ export interface LeaderboardRow {
   display: string
   /** Secondary line under the name. */
   unit: string
+  /** Only set for the energy category: progress toward the next tier. */
+  progress?: {
+    fraction: number
+    nextLabel: string | null
+  }
 }
 
 export interface LeaderboardOptions {
@@ -93,11 +98,13 @@ export function computeLeaderboard({
         // distance includes every member (even at 0) rather than omitting
         // anyone who hasn't logged power yet.
         const sum = own.reduce((total, s) => total + (energyWh(s) ?? 0), 0)
+        const progress = energyProgress(sum)
         return {
           member,
           value: sum,
           display: fmtEnergy(sum),
           unit: energyEquivalent(sum),
+          progress: { fraction: progress.fraction, nextLabel: progress.nextLabel },
         }
       })
       .sort((a, b) => b.value - a.value || a.member.display_name.localeCompare(b.member.display_name))
